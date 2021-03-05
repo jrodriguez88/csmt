@@ -72,7 +72,7 @@ basic_qc_nasa <- function(df){
                                 tmax<tmin ~ median(df$tmax, na.rm = T),
                                 tmax == tmin ~ median(df$tmax, na.rm = T), 
                                 TRUE ~ tmax),
-               tmin = case_when(tmin>40|tmin<-5 ~ median(df$tmin, na.rm = T),
+               tmin = case_when(tmin>40|tmin<=5 ~ median(df$tmin, na.rm = T),
                                 tmin > tmax ~ median(df$tmin, na.rm = T),
                                 tmin == tmax ~ median(df$tmin, na.rm = T), 
                                 TRUE ~ tmin),
