@@ -6,7 +6,7 @@
 
 
 ### Download *.EXE  ----> drates.exe, param.exe, oryzav3.exe, standard.crp 
-download_ORYZA_Tools <- function(){
+download_ORYZA_Tools <- function(folder = ".", ){
     ip <- function() {
         if (.Platform$OS.type == "windows") {
             ipmessage <- system("ipconfig", intern = TRUE)
@@ -17,26 +17,27 @@ download_ORYZA_Tools <- function(){
         any(grep(validIP, ipmessage))
     }  
     
-    if ((file.exists("ORYZA3.exe")) &&
-        (file.exists("drate(v2).exe")) &&
-        (file.exists("PARAM(v2).exe")) &&
-        (file.exists("standard.crp"))){
+    if (all(c("ORYZA3.exe", "DRATE(v2).exe", "PARAM(v2).exe", "standard.crp") %in% list.files(folder))){
+            
+           print("All files in destination folder")
+            
+            
     } else if(ip()==T){
         
         # Download DRATES and PARAM app  
         download.file(url='https://sites.google.com/a/irri.org/oryza2000/downloads/new-release/download-oryza-version3/AllTools.zip',
                       destfile='AllTools.zip', method='auto')
         ls_tools<- unzip('AllTools.zip', list = T)
-        unzip('AllTools.zip', files = ls_tools$Name[c(2,4)])
+        unzip('AllTools.zip', exdir = folder, files = ls_tools$Name[c(1,2,4)])
         
         # Download ORYZA.exe
         download.file(url='https://sites.google.com/a/irri.org/oryza2000/downloads/new-release/download-oryza-version3/ORYZA3.zip',
                       destfile='ORYZA3.zip', method='auto')
-        unzip('ORYZA3.zip', files="ORYZA3.exe")
+        unzip('ORYZA3.zip', exdir = folder, files="ORYZA3.exe")
         
         #Download standard.crp
         download.file("https://sites.google.com/a/irri.org/oryza2000/downloads/new-release/download-oryza-version3/standard.crp",
-                      destfile = "standard.crp", method='auto')
+                      destfile = paste(folder, "standard.crp", sep = "/"), method='auto')
         
         file.remove('AllTools.zip')
         file.remove('ORYZA3.zip')
@@ -48,11 +49,6 @@ download_ORYZA_Tools <- function(){
 ####  ORYZA3.exe & drate(v2).exe & PARAM(v2).exe ####
 ####        AND CROP FILE standard.crp           ####
 #####################################################")
-        
-        stopifnot((file.exists("ORYZA3.exe")) &&
-                      (file.exists("drate(v2).exe")) &&
-                      (file.exists("PARAM(v2).exe")) &&
-                      (file.exists("standard.crp")))
         
         print(mens)
     }
@@ -70,6 +66,7 @@ inpack <- function(pack){
 
 ### 'read_INPUT_data' function to read xlsx files ---->  c(LOC_ID, cultivar), base_raw_data
 read_INPUT_data <- function(file) {
+    stopifnot(require(readxl))
     sheets <- readxl::excel_sheets(file)
     x <-    lapply(sheets, function(X) readxl::read_excel(file, sheet = X))
     names(x) <- sheets
@@ -121,7 +118,6 @@ HUH_cal <- function(tmax, tmin, tbase = 8, topt = 30, thigh = 42.5) {
 #Production Protection Paper 17. Rome: Food and Agricultural Organization.
 #64 p.
 # kRs adjustment coefficient (0.16.. 0.19) -- for interior (kRs = 0.16) and coastal (kRs = 0.19) regions
-
 srad_cal <- function(data, lat, lon, alt, A = 0.29, B = 0.45, kRs = 0.175){
     
     stopifnot(require(sirad))
@@ -150,5 +146,55 @@ srad_cal <- function(data, lat, lon, alt, A = 0.29, B = 0.45, kRs = 0.175){
     
     
 }
+
+
+# function for search and replace outliers data
+replace_outlier <- function(data, fill = "na"){
+    
+    fill <- switch(fill,
+                   na = NA_real_,
+                   median = median(data, na.rm = T),
+                   mean = mean(data, na.rm = T))
+    
+    data[data %in% boxplot.stats(data)$out] = fill
+    
+    return(data)
+    
+}
+
+###Bootstraping function 
+mean_boot <- function(x){
+    smean.cl.boot(x, conf.int=.95, B=1000, na.rm=TRUE, reps=T)[1]}
+
+# Function to calculate evaluation metrics || 
+# Must had observated and simulated data in columns"obs" and "sim"
+get_metrics <- function(data) {
+    
+    data %>% filter(complete.cases(.)) %>%
+        summarise(n = n(),
+                  r = cor(obs, sim, method = c("pearson")),
+                  RMSE = sqrt(mean((sim - obs)^2, na.rm = T)),
+                  NRMSE = RMSE/mean(obs, na.rm = T),
+                  MAE = sum(abs(sim - obs)/n),
+                  MBE = sum((sim - obs))/n,
+                  d = 1 - ((sum((sim - obs)^2, na.rm = T))/
+                               sum((abs(sim - mean(obs, na.rm = T)) +
+                                        abs(obs - mean(obs, na.rm = T)))^2, na.rm = T)),
+                  NSE = 1 - ((sum((sim - obs)^2, na.rm = T))/
+                                 sum((obs - mean(obs, na.rm = T))^2, na.rm = T)),
+                  rsq = summary(lm(sim ~ obs))$r.squared)
+    
+}
+
+##ggplot favo theme
+theme_jre <- theme(
+    legend.position="bottom",
+    panel.grid.minor = element_blank(),
+    strip.background=element_rect(fill="white", size=1.5, linetype="solid"),
+    strip.text = element_text(face = "bold"))
+
+
+
+
 
 
