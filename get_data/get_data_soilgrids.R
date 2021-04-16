@@ -21,22 +21,22 @@ library(jsonlite)
 
 
 #### 'get_data_soilgrids' function for download soilgriddata
-#get_data_soilgrids_v1 <- function(soil_vars, lat, lon, depths){
-    
-    link <- paste0("https://rest.soilgrids.org/query?lon=", lon, "&lat=", lat, "&attributes=",
-                   paste0(soil_vars, collapse = ","),"&depths=", paste0(depths, collapse = ","))
-    
-    json_data <- fromJSON(link)
-    
-    data <- map(.x = soil_vars, ~json_data$properties[[.x]]$M) %>% set_names(soil_vars)
-    
-    dept_value <- json_data$properties$depthCodesMeters %>% 
-        bind_cols %>% dplyr::select(contains("sl")) %>% 
-        gather(sl, depth)
-    
-    data %>% bind_rows(.id = "soil_vars") 
-        
-}
+##get_data_soilgrids_v1 <- function(soil_vars, lat, lon, depths){
+#    
+#    link <- paste0("https://rest.soilgrids.org/query?lon=", lon, "&lat=", lat, "&attributes=",
+#                   paste0(soil_vars, collapse = ","),"&depths=", paste0(depths, collapse = ","))
+#    
+#    json_data <- fromJSON(link)
+#    
+#    data <- map(.x = soil_vars, ~json_data$properties[[.x]]$M) %>% set_names(soil_vars)
+#    
+#    dept_value <- json_data$properties$depthCodesMeters %>% 
+#        bind_cols %>% dplyr::select(contains("sl")) %>% 
+#        gather(sl, depth)
+#    
+#    data %>% bind_rows(.id = "soil_vars") 
+#        
+#}
 #
 
 #Default value : List [ "bdod", "cec", "cfvo", "clay", "nitrogen", "ocd", "ocs", "phh2o", "sand", "silt", "soc" ]
