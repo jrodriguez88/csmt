@@ -47,7 +47,8 @@ value = c("Q0.5", "mean")
 depths = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm") 
 
 ### 'get_data_soilgrids' function for download soilgriddata V2 https://www.isric.org/explore/soilgrids/faq-soilgrids 
-get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "nitrogen", "sand", "silt", "soc"), value = c("mean"), depths = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm")){
+get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "nitrogen", "sand", "silt", "soc"),
+                               value = c("mean"), depths = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm")){
     
     var_to_dl <- paste0("&property=", soil_vars, collapse = "")
     depts_to_dl <- paste0("&depth=", depths, collapse = "")
