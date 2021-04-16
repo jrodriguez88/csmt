@@ -80,11 +80,32 @@ get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "
 }
 
  
-#soilgrids_data <- get_data_soilgrids(lat, lon, depths = '0-5cm')
+#soilgrids_data <- get_data_soilgrids(lat, lon)
 
-soilgrids_data %>% unnest(data) %>% 
-    select(var, range, label, values) %>% flatten() %>%
-    set_names(c("var", "tdepth","bdepth", "unit", "label", "value"))
+#soilgrids_data %>% unnest(data) %>% select(var, mapped_units) %>% distinct()
+
+#soilgrids_data %>% unnest(data) %>% 
+#    select(var, range, label, values) %>% flatten() %>%
+##    set_names(c("var", "tdepth","bdepth", "unit", "label", "value")) %>%
+#    pivot_wider(names_from = var, values_from = values.mean) %>% 
+#    mutate_at(.vars = vars(bdod, cfvo, clay, sand, silt), ~.x/10) %>%
+#    mutate(Penetrability = Penetrability,
+#           TKL = c(0.05, diff(abs(range.bottom_depth/100))),
+#           WCFC = WWP + AWCh1,
+#           SSKS = 75*24*10*(((((1-(BLDFIE/2650))*100)-WCFC))^2/(WCFC)^2),   #Method developed by Suleiman and Ritchie (2001)
+#           STC = get_STC(SNDPPT, CLYPPT),
+#           CRa = case_when(str_detect(STC, "Sa|LoSa|SaLo") ~ (-0.3112 - SSKS*10^(-5)),
+#                           str_detect(STC, "Lo|SiLo|Si") ~ (-0.4986 + SSKS*9*10^(-5)),
+#                           str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-0.5677 - SSKS*4*10^(-5)),
+#                           str_detect(STC, "SiClLo|SiCl|Cl") ~ (-0.6366 + SSKS*8*10^(-4))),
+#           CRb = case_when(str_detect(STC, "Sa|LoSa|SaLo") ~ (-1.4936 + 0.2416*log(SSKS)),
+#                           str_detect(STC, "Lo|SiLo|Si") ~ (-2.1320 + 0.4778*log(SSKS)),
+#                           str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-3.7189 + 0.5922*log(SSKS)),
+#                           str_detect(STC, "SiClLo|SiCl|Cl") ~ (-1.9165 + 0.7063*log(SSKS)))) %>%
+#    rename(WCWP = WWP, WCST = AWCtS, Gravel = CRFVOL) %>% 
+#    dplyr::select(TKL, WCST, WCFC, WCWP, SSKS, Penetrability, Gravel, CRa, CRb, STC) %>%
+#    setNames(c("Thickness", "Sat", "FC", "WP", "Ksat", "Penetrability", "Gravel", "CRa", "CRb", "description"))
+    
 
 from_soilgrids_to_aquacrop <- function(id_name, soilgrids_data, Penetrability = 100) {
     
