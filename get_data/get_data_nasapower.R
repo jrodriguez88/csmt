@@ -5,11 +5,11 @@
 # 2019
 
 ## Load Packages
-library(tidyverse)
-library(curl)
-library(lubridate)
-library(jsonlite)
-library(naniar)
+#library(tidyverse)
+#library(curl)
+#library(lubridate)
+#library(jsonlite)
+#library(naniar)
 #library(tictoc)
 
 ##Set arguments. Information about wth_vars and data access : https://power.larc.nasa.gov/docs/v1/

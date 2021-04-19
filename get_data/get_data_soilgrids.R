@@ -5,8 +5,8 @@
 # 2019
 
 ## Load Packages
-library(tidyverse)
-library(jsonlite)
+#library(tidyverse)
+#library(jsonlite)
 #library(soiltexture)
 #library(tictoc)
 
@@ -40,11 +40,11 @@ library(jsonlite)
 #
 
 #Default value : List [ "bdod", "cec", "cfvo", "clay", "nitrogen", "ocd", "ocs", "phh2o", "sand", "silt", "soc" ]
-soil_vars <- c("bdod", "cec", "cfvo", "clay", "nitrogen", "ocd", "ocs", "phh2o", "sand", "silt", "soc")
+#soil_vars <- c("bdod", "cec", "cfvo", "clay", "nitrogen", "ocd", "ocs", "phh2o", "sand", "silt", "soc")
 #Default value : List [ "Q0.05", "Q0.5", "Q0.95", "mean", "uncertainty" ]
-value = c("Q0.5", "mean") 
+#value = c("Q0.5", "mean") 
 #Default value : List [ "0-5cm", "0-30cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm" ]
-depths = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm") 
+#depths = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm") 
 
 ### 'get_data_soilgrids' function for download soilgriddata V2 https://www.isric.org/explore/soilgrids/faq-soilgrids 
 get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "nitrogen", "sand", "silt", "soc"),
