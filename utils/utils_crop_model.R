@@ -186,8 +186,8 @@ get_metrics <- function(data) {
     
 }
 
-##ggplot favo theme
-theme_jre <- theme(
+##ggplot fav theme
+theme_jre <- theme_bw() + theme(
     legend.position="bottom",
     panel.grid.minor = element_blank(),
     strip.background=element_rect(fill="white", size=1.5, linetype="solid"),

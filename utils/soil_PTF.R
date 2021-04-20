@@ -19,7 +19,6 @@
 # Soil Saturated Hydraulic Conductivity = SSKS = (mm/h)
 
 
-
 #############################################################################################
 ##### SAXTON & RAWLS: SOIL WATER CHARACTERISTICS ESTIMATES
 ##### http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.452.9733&rep=rep1&type=pdf
@@ -124,9 +123,9 @@ SSKS_Saxton <- function(S, C, OM, SBDM, WCFC=NULL, WCWP=NULL, WCST=NULL){
     WCST <- WCST_Saxton(SBDM)}
   
   B <- (log(1500) - log(33))/(log(WCFC/100) - log(WCWP/100))  #Eq 15
-  alp <- 1/B
+  alp <- 1/B                #Eq 18
   
-  SSKS <- 1930*(WCST/100 - WCFC/100)^(3-alp)
+  SSKS <- 1930*(WCST/100 - WCFC/100)^(3-alp)   # Eq 16
   
   return(SSKS)
   
@@ -313,7 +312,231 @@ WCWP_Tomasella <- function(C, SBDM, GWCFC){
 #WCWP_Tomasella(C, SBDM, GWCFC)
 
 
+#############################################################################################
+##### Saturated hydraulic conductivity Functions (SSKS)
+##### Main authors: Pachepsky(2004), Ghanbarian(2017), Ferrer(2004) .. Many others
 
+#  Pachepsky, Y., & Rawls, W. J. (Eds.). (2004). Development of pedotransfer functions in soil hydrology 
+#  (Vol. 30). Elsevier.https://www.elsevier.com/books/development-of-pedotransfer-functions-in-soil-hydrology/pachepsky/978-0-444-51705-0
+
+#  Ghanbarian, B., Taslimitehrani, V., & Pachepsky, Y. A. (2017). Accuracy of sample dimension-dependent pedotransfer functions in 
+#  estimation of soil saturated hydraulic conductivity. Catena, 149, 374-380. https://doi.org/10.1016/j.catena.2016.10.015 
+
+#  Ferrer Julià, M., T.E. Monreal, A.S. del Corral Jiménez, and E. García Meléndez. 2004. Constructing a saturated hydraulic conductivity
+#  map of Spain using pedotransfer functions and spatial prediction. Geoderma 123:257–277. doi:10.1016/j.geoderma.2004.02.011
+
+
+#############################################################################################
+
+
+# Wösten et al. (1999)
+#Topsoil is a parameter that is set to 1 for topsoils and to 0 for subsoils,
+SSKS_Wosten99 <- function(S,C,OM,SBDM, tops=0) {
+  Si=100-C-S
+  x <- 7.755 + 0.0352*Si + 0.93*tops - 0.967*(SBDM^2)- 0.000484*(C^2) - 0.000322*(Si^2) + 
+    0.001/Si - 0.0748/OM - 0.643*log(Si) - 0.01398*SBDM*OM - 0.1673*SBDM*OM + 
+    0.02986*tops*C - 0.03305*tops*Si
+  
+  SSKS_W <- 1.15741*(10^-7)*exp(x)*3600000  #conversion to mm/h
+  return(SSKS_W)
+}
+#SSKS_Wosten99(S,C,OM,SBDM, tops=0)
+
+# Vereecken et al. (1990)
+SSKS_Vereecken <- function(S, C, OM, SBDM) {
+  x <- 20.62- 0.96*log(C)- 0.66*log(S) - 0.46*log(OM) - 8.43*SBDM
+  SSKS_Ve <- exp(x)*10/24
+  
+  return(SSKS_Ve)
+  
+}
+#SSKS_Vereecken(S, C, OM, SBDM)  ##verificar
+
+
+#Ferrer-Julia et al. (2004)
+SSKS_Ferrer <- function(S) {
+  SSKS_Fer <-  3600000* 2.556*(10^-7)*exp(0.0491*S)
+  
+  return(SSKS_Fer)
+}
+#SSKS_Ferrer(S)
+
+
+# Brakensiek et al. (1984) SPOR = %
+SSKS_Brakensiek <- function(S,C, SBDM, SPOR=NULL) {
+  #SPOR = as fraction    
+  if(is.null(SPOR)){
+    #        message("Porosity was estimated using 2.65g/cm3 as particle density")
+    SPOR <- (1-(SBDM/2.65))*100
+  }
+  SSKS_Br <- 24*exp(19.52348*(SPOR/100) - 8.96847 - 0.028212*C + 0.00018107*(S^2) - 0.0094125*(C^2) - 8.395215*((SPOR/100)^2) + 0.077718*((SPOR/100)*S) - 0.00298*((SPOR/100)^2)*(S^2) -0.019492*((SPOR/100)^2)*(C^2) + 0.0000173*(C*S^2) + 0.02733*((SPOR/100)*C^2) + 0.001434*((SPOR/100)*S^2)- 0.0000035*(S*C^2))
+  return(SSKS_Br*10/24)
+}
+#SSKS_Brakensiek(S, C, SBDM)
+#SSKS_Brakensiek(S, C, SPOR = 42)
+
+# Campbell and Shiozawa (1994)  #Error Si by S
+SSKS_Campbell <- function(S,C){
+  SSKS_Ca <- 129.6*exp(-0.07*S - 0.167*C)
+  return(SSKS_Ca*10/24)
+}
+#SSKS_Campbell(S, C)
+
+# Cosby et al. (1984) 
+SSKS_Cosby <- function(S,C){
+  SSKS_Co <- 60.96*10^((-0.6+0.01268*S) - (0.0064*C))
+  return(SSKS_Co*10/24)
+}
+#SSKS_Cosby(S,C)
+
+#Jabro (1992)
+SSKS_Jabro <- function(S, C, SBDM){
+  Si <- 100-C-S
+  SSKS_Ja <- exp(9.56 - 0.81*log(Si) - 1.09*log(C) - 4.64*SBDM)
+  return(SSKS_Ja*10)
+}
+#SSKS_Jabro(S,C,SBDM)
+
+
+# Puckett et al. (1985)
+SSKS_Puckett <- function(C){
+  SSKS_Pu <- 376.7*exp(-0.1975*C)
+  return(SSKS_Pu*10/24)
+}
+#SSKS_Puckett(C)
+
+# Dane and Puckett (1994)
+SSKS_Dane_Puck <- function(C){
+  SSKS_DP <- 729.22*exp(-0.144*C)
+  return(SSKS_DP*10/24)
+}
+#SSKS_Dane_Puck(C)
+
+# Saxton et al. (1986)
+#24*exp(12.012 - (0.0755*S2))  ## No useful 
+
+# RAWLS (1986)
+SSKS_Rawls <- function(S,C){
+  SST_Rawls <- 0.332 - (7.251*(10^-4)*S) + 0.1276*log10(C)
+  SSKS_R <- 24*exp(12.012 - (7.55*(10^-2)*S) + (-3.8950 + (0.03671*S) - (0.1103*C) + 8.7546*(10^-4)*(C^2))*(1/(SST_Rawls)))
+  
+  return(SSKS_R*10/24)
+}
+#SSKS_Rawls(S,C)
+
+
+
+#############################################################################################
+##### Relative Effective Porosity Model (REPM)
+##### Suleiman, A. A., & Ritchie, J. T. (2001).
+
+#  Suleiman, A. A., & Ritchie, J. T. (2001). Estimating saturated hydraulic conductivity from soil porosity. 
+#  Transactions of the ASAE, 44(2), 235. https://doi.org/10.13031/2013.4683
+
+#cited by: 
+#  Gijsman, A. J., Thornton, P. K., & Hoogenboom, G. (2007). Using the WISE database to parameterize soil inputs for crop simulation models.
+#  Computers and Electronics in Agriculture, 56(2), 85-100. https://doi.org/10.1016/j.compag.2007.01.001 
+
+#############################################################################################
+
+SSKS_Suleiman_Ritchie <- function(S, C, OM, SBDM, SPOR=NULL, WCFC=NULL){
+  #    stopifnot(SPOR)
+  if(is.null(WCFC)){
+    message("WCFC was estimated using Saxton-PTF")
+    WCFC <- WCFC_Saxton(S,C,OM)}
+  
+  if(is.null(SPOR)){
+    message("Porosity was estimated using 2.65g/cm3 as particle density")
+    SPOR <- (1-(SBDM/2.65))*100
+  }
+  
+  SSKS <- 75*((SPOR-WCFC)^2/(WCFC)^2)
+  
+  return(SSKS*10/24)
+  
+}
+#SSKS_Suleiman_Ritchie(S,C,OM, SBDM)
+#SSKS_Suleiman_Ritchie(SPOR = 42, WCFC = 24)
+
+
+### 'get_STC' function to get Soil Texture Class from soil sand, clay content.. based USDA system class
+get_STC <- function(S, C, sysclass="USDA") {
+  stopifnot(require(soiltexture))
+  
+  Si <- 100-(S+C)
+  dat <- data.frame(SAND=S, CLAY=C, SILT=Si)
+  
+  STC <- TT.points.in.classes(
+    tri.data = dat,
+    class.sys = paste0(sysclass, ".TT"),
+    PiC.type = "t"
+  )
+  
+  return(STC)
+  
+}
+
+
+
+# Function to estimate Soil Saturated Hydraulic Conductivity (SSKS) from different Soil Pedotransfer Function (PTF)
+#SBDM by texture <-  "https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/office/ssr10/tr/?cid=nrcs144p2_074844"
+# For rice-soils BD values between 1.3 - 1.7 (g/cm³)
+# OM values between 1 - 3 (%)
+# min and max are SSKS-threshold
+
+SSKS_cal <- function(S, C, SOM=1.5, SBDM=1.5, kmin=1, kmax=NA, output='bootmean') {
+  
+  #    source("https://raw.githubusercontent.com/jrodriguez88/ORYZA_Model_RTOOLS/master/PT_Functions.R")
+  
+  
+  ssks_data <- tibble(S,C,SOM,SBDM) %>%
+    mutate(SSKS_Brakensiek = SSKS_Brakensiek(S, C, SBDM),
+           SSKS_Campbell = SSKS_Campbell(S, C),
+           SSKS_Cosby = SSKS_Cosby(S, C),
+           SSKS_Dane_Puckett = SSKS_Dane_Puck(C),
+           SSKS_Jabro = SSKS_Jabro(S, C, SBDM),
+           SSKS_Puckett = SSKS_Puckett(C),
+           SSKS_Rawls = SSKS_Rawls(S, C),
+           SSKS_Saxton = SSKS_Saxton(S, C, SOM, SBDM), 
+           SSKS_Suleiman_Ritchie = SSKS_Suleiman_Ritchie(S, C, SOM, SBDM), 
+           SSKS_Wosten = SSKS_Wosten99(S,C, SOM, SBDM),
+           SSKS_Vereecken = SSKS_Vereecken(S, C, SOM, SBDM),
+           SSKS_Ferrer = SSKS_Ferrer(S)) %>%
+    select(contains("SSKS")) %>%
+    gather(key="KS_PTF", value = "SSKS") %>%
+    extract(KS_PTF, "KS_PTF", "_([a-zA-Z0-9_]+)") %>%
+    mutate(KS_PTF=as.factor(KS_PTF), SSKS=replace(SSKS, SSKS>kmax, NA), SSKS=replace(SSKS, SSKS<kmin, NA))%>%
+    drop_na() 
+  
+  summary <- ssks_data %>%
+    summarize(ssks_bootmean = mean(sample(SSKS, 1000, replace = T)),
+              ssks_mean = mean(SSKS),
+              ssks_bootmedian = median(sample(SSKS, 1000, replace = T)),
+              ssks_median = median(SSKS),
+              ssks_min = quantile(sample(SSKS, 1000, replace = T),0.025),
+              ssks_max = quantile(sample(SSKS, 1000, replace = T),0.975),
+              ssks_sd = sd(SSKS))
+  
+  switch (output,
+          data = ssks_data,
+          summary = summary,
+          bootmean = summary$ssks_bootmean,
+          mean = summary$ssks_mean,
+          bootmedian = summary$bootmedian,
+          median = summary$ssks_median,
+          min = summary$ssks_min,
+          max = summary$ssks_max,
+          sd = summary$ssks_sd)
+  
+  
+}
+
+
+#SSKS_cal(39.2, 15.15, 1.14, 1.53)
+
+#SSKS_cal(39.2, 15.15, 1.14, 1.53, output = 'data')
+#SSKS_cal(39.2, 15.15, 1.14, 1.53, output = 'summary')
+#SSKS_cal(39.2, 15.15, 1.14, 1.53, output = 'min')
 
 
 

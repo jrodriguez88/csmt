@@ -11,7 +11,7 @@
 #library(tictoc)
 
 
-#Set arguments. REST SoilGrids API : https://rest.soilgrids.org/ https://www.isric.org/explore/soilgrids/faq-soilgrids 
+#Set arguments. REST SoilGrids API : https://rest.soilgrids.org/    https://www.isric.org/explore/soilgrids/faq-soilgrids 
 #path <- getwd()
 #soil_vars <- c("BLDFIE","CLYPPT","SNDPPT","CRFVOL","ORCDRC","WWP","AWCh1","AWCtS")
 #depths <- c("sl1", "sl2", "sl3", "sl4", "sl5")
@@ -80,66 +80,31 @@ get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "
  return(data)
 }
 
- 
 #soilgrids_data <- get_data_soilgrids(lat, lon)
 
 #soilgrids_data %>% unnest(data) %>% select(var, mapped_units) %>% distinct()
 
-#soilgrids_data %>% unnest(data) %>% 
-#    select(var, range, label, values) %>% flatten() %>%
-##    set_names(c("var", "tdepth","bdepth", "unit", "label", "value")) %>%
-#    pivot_wider(names_from = var, values_from = values.mean) %>% 
-#    mutate_at(.vars = vars(bdod, cfvo, clay, sand, silt), ~.x/10) %>%
-#    mutate(Penetrability = Penetrability,
-#           TKL = c(0.05, diff(abs(range.bottom_depth/100))),
-#           WCFC = WWP + AWCh1,
-#           SSKS = 75*24*10*(((((1-(BLDFIE/2650))*100)-WCFC))^2/(WCFC)^2),   #Method developed by Suleiman and Ritchie (2001)
-#           STC = get_STC(SNDPPT, CLYPPT),
-#           CRa = case_when(str_detect(STC, "Sa|LoSa|SaLo") ~ (-0.3112 - SSKS*10^(-5)),
-#                           str_detect(STC, "Lo|SiLo|Si") ~ (-0.4986 + SSKS*9*10^(-5)),
-#                           str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-0.5677 - SSKS*4*10^(-5)),
-#                           str_detect(STC, "SiClLo|SiCl|Cl") ~ (-0.6366 + SSKS*8*10^(-4))),
-#           CRb = case_when(str_detect(STC, "Sa|LoSa|SaLo") ~ (-1.4936 + 0.2416*log(SSKS)),
-#                           str_detect(STC, "Lo|SiLo|Si") ~ (-2.1320 + 0.4778*log(SSKS)),
-#                           str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-3.7189 + 0.5922*log(SSKS)),
-#                           str_detect(STC, "SiClLo|SiCl|Cl") ~ (-1.9165 + 0.7063*log(SSKS)))) %>%
-#    rename(WCWP = WWP, WCST = AWCtS, Gravel = CRFVOL) %>% 
-#    dplyr::select(TKL, WCST, WCFC, WCWP, SSKS, Penetrability, Gravel, CRa, CRb, STC) %>%
-#    setNames(c("Thickness", "Sat", "FC", "WP", "Ksat", "Penetrability", "Gravel", "CRa", "CRb", "description"))
-    
 
 from_soilgrids_to_aquacrop <- function(id_name, soilgrids_data, Penetrability = 100) {
     
-    # Depths of sl in soilgrids    
-    dept_value <- tibble(sd1 = -0.025, 
-                         sd2 = -0.1, 
-                         sd3 = -0.225, 
-                         sd4 = -0.45, 
-                         sd5 = -0.8, 
-                         sd6 = -1.5, 
-                         sl1 = 0.0, 
-                         sl2 = -0.05, 
-                         sl3 = -0.15, 
-                         sl4 = -0.3, 
-                         sl5 = -0.6, 
-                         sl6 = -1.0, 
-                         sl7 = -2.0, 
-                         xd1 = -0.2, 
-                         xd2 = -0.5) %>%
-        dplyr::select(contains("sl")) %>% 
-        gather(sl, depth)
-    
+#    source("https://raw.githubusercontent.com/jrodriguez88/csmt/master/utils/soil_PTF.R", encoding = "UTF-8")
+
     
     ## transform data to aquacrop format
-    data_inp <- soilgrids_data %>% 
-        gather(sl, value, -soil_vars) %>% 
-        spread(soil_vars, value) %>%
-        left_join(dept_value, by="sl") %>%# rename(WCWP = WWP, WCST = AWCtS) %>%
+    data_inp <- soilgrids_data %>% unnest(data) %>% 
+        select(var, range, label, values) %>% flatten() %>%
+        #    set_names(c("var", "tdepth","bdepth", "unit", "label", "value")) %>%
+        pivot_wider(names_from = var, values_from = values.mean) %>% 
+        mutate_at(.vars = vars(bdod, cfvo, clay, sand, silt), ~.x/10) %>%
         mutate(Penetrability = Penetrability,
-               TKL = c(0, diff(abs(depth))),
-               WCFC = WWP + AWCh1,
-               SSKS = 75*24*10*(((((1-(BLDFIE/2650))*100)-WCFC))^2/(WCFC)^2),   #Method developed by Suleiman and Ritchie (2001)
-               STC = get_STC(SNDPPT, CLYPPT),
+               TKL = c(0.05, diff(abs(range.bottom_depth/100))),
+               bdod = bdod/10,
+               OM = (100/58)*soc/100,
+               WCFC = WCFC_Saxton(sand, clay, OM),
+               WCST = WCST_Saxton(bdod),
+               WCWP = WCWP_Saxton(sand, clay, OM),
+               SSKS = SSKS_Suleiman_Ritchie(sand, clay, OM, bdod)*24,   #Method developed by Suleiman and Ritchie (2001)
+               STC = get_STC(sand, clay),
                CRa = case_when(str_detect(STC, "Sa|LoSa|SaLo") ~ (-0.3112 - SSKS*10^(-5)),
                                str_detect(STC, "Lo|SiLo|Si") ~ (-0.4986 + SSKS*9*10^(-5)),
                                str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-0.5677 - SSKS*4*10^(-5)),
@@ -148,7 +113,7 @@ from_soilgrids_to_aquacrop <- function(id_name, soilgrids_data, Penetrability = 
                                str_detect(STC, "Lo|SiLo|Si") ~ (-2.1320 + 0.4778*log(SSKS)),
                                str_detect(STC, "SaCl|SaClLo|ClLo") ~ (-3.7189 + 0.5922*log(SSKS)),
                                str_detect(STC, "SiClLo|SiCl|Cl") ~ (-1.9165 + 0.7063*log(SSKS)))) %>%
-        rename(WCWP = WWP, WCST = AWCtS, Gravel = CRFVOL) %>% 
+        rename(Gravel = cfvo) %>% 
         dplyr::select(TKL, WCST, WCFC, WCWP, SSKS, Penetrability, Gravel, CRa, CRb, STC) %>%
         setNames(c("Thickness", "Sat", "FC", "WP", "Ksat", "Penetrability", "Gravel", "CRa", "CRb", "description"))
     
