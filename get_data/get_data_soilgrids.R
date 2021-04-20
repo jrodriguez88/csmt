@@ -87,7 +87,7 @@ get_data_soilgrids <- function(lat, lon, soil_vars = c("bdod", "cfvo", "clay", "
 
 from_soilgrids_to_aquacrop <- function(id_name, soilgrids_data, Penetrability = 100) {
     
-#    source("https://raw.githubusercontent.com/jrodriguez88/csmt/master/utils/soil_PTF.R", encoding = "UTF-8")
+    source("https://raw.githubusercontent.com/jrodriguez88/csmt/master/utils/soil_PTF.R", encoding = "UTF-8")
 
     
     ## transform data to aquacrop format
