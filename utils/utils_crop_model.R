@@ -6,7 +6,7 @@
 
 
 ### Download *.EXE  ----> drates.exe, param.exe, oryzav3.exe, standard.crp 
-download_ORYZA_Tools <- function(folder = ".", ){
+download_ORYZA_Tools <- function(folder = "."){
     ip <- function() {
         if (.Platform$OS.type == "windows") {
             ipmessage <- system("ipconfig", intern = TRUE)
@@ -187,11 +187,13 @@ get_metrics <- function(data) {
 }
 
 ##ggplot fav theme
-theme_jre <- theme_bw() + theme(
+set_theme_jre <- function() {
+  theme_jre <<- theme_bw() + theme(
     legend.position="bottom",
     panel.grid.minor = element_blank(),
     strip.background=element_rect(fill="white", size=1.5, linetype="solid"),
     strip.text = element_text(face = "bold"))
+}
 
 
 #function to get elevation data # https://api.open-elevation.com/api/v1/lookup?locations=4.5,-75.83933
