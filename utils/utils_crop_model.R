@@ -194,6 +194,19 @@ theme_jre <- theme_bw() + theme(
     strip.text = element_text(face = "bold"))
 
 
+#function to get elevation data # https://api.open-elevation.com/api/v1/lookup?locations=4.5,-75.83933
+get_elevation <- function(lat, lon){
+  
+  elev_raw <- fromJSON(
+    paste0("https://api.open-elevation.com/api/v1/lookup?locations=", lat, ",", lon)
+  )
+  
+  return(elev_raw$results$elevation)
+  
+  
+}
+
+
 
 
 
