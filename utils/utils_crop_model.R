@@ -196,18 +196,21 @@ set_theme_jre <- function() {
 }
 
 
-#function to get elevation data # https://api.open-elevation.com/api/v1/lookup?locations=4.5,-75.83933
-get_elevation <- function(lat, lon){
+#function to get elevation from # https://www.opentopodata.org/#public-api
+# lan & lon in decimal degrees
+# dataset c("aster30m", "strm30", "mapzen", ...)
+
+get_elevation <- function(lat, lon, dataset = "aster30m"){
   
   elev_raw <- fromJSON(
-    paste0("https://api.open-elevation.com/api/v1/lookup?locations=", lat, ",", lon)
+    paste0("https://api.opentopodata.org/v1/", dataset, "?locations=", lat, ",", lon)
   )
   
   return(elev_raw$results$elevation)
   
   
 }
-
+#get_elevation(3.82, -76.5)
 
 
 
